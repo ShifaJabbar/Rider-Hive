@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Rider Hive {% endblock %}
+{% block content %}
+
+<style>
+    .main-container {
+        display: flex;
+        width: 100%;
+    }
+    .main-container .sidebar {
+        width: 35%;
+        background-color: #dcdcdc;
+        padding: 2rem;
+        height: 110vh;
+        overflow-y: auto;
+    }
+    .main-container .content {
+        flex-grow: 1;
+        padding: 2rem;
+        height: 110vh;
+        background-color: #f4f4f9;
+        overflow-y: auto;
+    }
+    .main-container h2 {
+        color: #333;
+        border-bottom: 2px solid #333;
+        padding-bottom: 0.5rem;
+    }
+    .main-container .profile {
+        margin-bottom: 2rem;
+    }
+    .main-container .profile p {
+        margin-bottom: 5px;
+        text-align: start; 
+
+    }
+    .main-container .profile a {
+        padding-left: 0px!important;
+    }
+
+    .main-container .ManageRides {
+        margin-bottom: 2rem;
+    }
+
+    .main-container .buttons button {
+        padding: 0.5rem 1rem;
+        margin-right: 0.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #1f2123;
+        color: #fff;
+    }
+    .main-container .buttons button:hover {
+        background-color: #0056b3;
+    }
+    .main-container .feedback textarea {
+        width: 100%;
+        height: 100px;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .main-container .rides-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .main-container .rides-list li {
+        background: #f9f9f9;
+        margin: 0.5rem 0;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .main-container .toggle-btn {
+        display: none;
+    }
+
+    .main-container .rides-list li {
+        background: #f9f9f9;
+        margin: 0.5rem 0;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        position: relative;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .main-container .rides-list li:hover {
+        background-color: #e8e8e8;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-container .rides-list li .actions {
+        display: none;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .main-container .rides-list li:hover .actions {
+        display: block;
+    }
+
+    .main-container .actions i {
+        margin-left: 5px;
+        cursor: pointer;
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
+    .main-container .actions a {
+        color: none!important;
+        text-decoration: none!important;
+    }
+
+    .main-container .actions i:hover {
+        color: #333;
+    }
+
+    .main-container .content .profile-edit .form-group {
+        text-align: start;
+    }
+
+    @media (max-width:1024px) {
+        .main-container .profile a * {
+            font-size: 80%;
+        }
+    }
+
+    @media (max-width:768px) {
+        .main-container .profile a * {
+            font-size: 80%;
+        }
+        .main-container {
+            display: grid;
+            font-size: 80%!important;
+        }
+        .main-container .toggle-btn {
+            background-color: #f4f4f9;
+            text-align: start;
+            display: block;
+            left: 0;
+            color: #010101;
+            font-size: 15px;
+            border: none;
+            padding: 10px;
+            padding-left: 2rem;
+            padding-bottom: 2rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        .main-container .sidebar {
+            display: none;
+            width: 100%; 
+            background-color: #dcdcdc;
+            padding: 2rem;
+            height: 0;
+            overflow-y: auto;
+            transition: height 1s ease, height 1s ease;
+        }
+
+        .sidebar.active {
+            height: 50vh;
+            display: block;
+            border: 2px solid #8c8c8c;
+        }
+    }
+    
+</style>
+
+<header style="background: #333; color: #fff; padding: 10px 0; text-align: center; ">
+    <h1 class="m-0">Car Owner Dashboard</h1>
+</header>
+
+<div id="successMessage"></div>
+{% for msg in messages %}
+<div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+    <strong>{{ msg }}</strong>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+
+<div class="main-container "> 
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Profile Section -->
+        <div class="profile row">
+            <div class="col-md-10">
+                <h2>Your Profile</h2>
+                <p><b>Name:</b> {{owner.name}}</p>
+                <p><b>Email:</b> {{owner.email}}</p>
+                <p><b>License:</b> {{owner.license}}</p>
+                <p><b>Phone:</b> +91{{owner.phone}}</p>
+                <p><b>Car Name:</b> {{owner.car_name}}</p>
+                <p><b>Car Number:</b> {{owner.car_number}}</p>
+                <p><b>Balance:</b> {{owner.cash}}₹ <button title="withdraw Your Balance" data-bs-toggle="modal" data-bs-target="#Withdraw" class="btn btn-outline-success" style="font-size: 9px; font-weight: bolder; padding: 3px;">withdraw</button></p>
+
+                <div class="modal fade" id="Withdraw" tabindex="-1" aria-labelledby="Withdraw" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="Withdraw">Withdraw</h1>
+                            </div>
+
+                            <form action="{% url 'withdraw' %}" method="post">
+                                <div class="modal-body">
+                                    {% csrf_token %}
+                                    <label for="amount" class="form-label">Enter The Amount</label>
+                                    <input type="number" class="form-control" name="amount" id="amount" required>
+                                </div>
+                                <div class="modal-footer">             
+                                    <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary bi bi-patch-check"> Withdraw</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'owner_logout' %}" class="btn"><button class="btn btn-outline-danger"><i class="bi bi-box-arrow-in-left"></i> Log Out</button></a>
+            </div>
+        </div>
+
+        <!-- Edit/Add Ride Section -->
+        <div class="section ManageRides">
+            <h2>Manage Rides</h2>
+            <p> Click Below to Add a Ride </p>
+            <div class="buttons">
+                <!-- <a href="{% url 'owner' %}" class="btn btn-dark">Edit Ride</a> -->
+                <a href="{% url 'add_trip' %}" class="btn btn-dark">Add Ride</a>
+            </div>
+        </div>
+
+        <div class="profile-edit">
+            <h1 class="mt-5">Edit Profile</h1>
+            <hr>
+            
+            <div class="col-md-9 mt-3">
+                <form action="{% url 'edit_owner_profile' %}" method="POST">
+                    {% csrf_token %}
+            
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" name="name" class="form-control" value="{{owner.name}}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" value="{{owner.email}}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="number" id="phone" name="phone" class="form-control" value="{{owner.phone}}" required maxlength="10" minlength="10">
+                    </div>
+
+                    <div class="form-group mb-3">              
+                        <label for="license">License Number</label>     
+                        <input type="text" class="form-control" id="license" name="license" value="{{owner.license}}" minlength="16" maxlength="20" required>                       
+                    </div>
+            
+                    <div class="form-group mb-3">       
+                        <label for="car_name">Car Name</label>              
+                        <input type="text" class="form-control" id="car_name" name="car_name" value="{{owner.car_name}}" required>                         
+                    </div>
+            
+                    <div class="form-group mb-3">    
+                        <label for="car_number">Car Number</label>             
+                        <input type="text" class="form-control" id="car_number" name="car_number" value="{{owner.car_number}}" required>                            
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea id="address" name="address" class="form-control" required>{{owner.address}}</textarea>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <input type="submit" class="form-control btn btn-outline-success" value="Update">
+                    </div>
+                </form>
+            </div>
+            <hr>
+
+            <h1 class="mt-5">Change Password</h1>
+            <hr>
+
+            <div class="col-md-9 mt-3">
+                <form action="{% url 'change_owner_password' %}" method="POST">
+                    {% csrf_token %}
+            
+                    <div class="form-group mb-3">
+                        <label for="old" class="form-label">Old Password</label>
+                        <input type="password" id="old" name="old" class="form-control" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="new1" class="form-label">New Password</label>
+                        <input type="password" id="new1" name="new1" class="form-control" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="new2" class="form-label">Re-Enter New Password</label>
+                        <input type="password" id="new2" name="new2" class="form-control" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <input type="submit" class="form-control btn btn-outline-success" value="Change Now">
+                    </div>
+                </form>
+            </div>
+            <hr>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="section feedback">
+            <form action="{% url 'send_feedback_owner' %}" method="post">
+                
+                <h2>Feedback</h2>
+                {% csrf_token %}
+                <textarea name="message" placeholder="Share your feedback here..." required></textarea>
+                <button type="submit" class="btn btn-outline-primary mt-2">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebarToggle" class="toggle-btn"><i class="bi bi-caret-right-square me-2"></i>Show My Rides</button>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <h2>My Rides</h2>
+
+        <select class="form-select" aria-label="Filter The Status" id="status-filter">
+            <option value="all">All</option>
+            <option value="P">Pending</option>
+            <option value="B">Booked</option>
+            <option value="V">Verified</option>
+        </select>
+    
+        <ul class="rides-list" id="rides-list"> 
+            {% if not trips %} <strong>You Have No Rides!</strong>{% endif %}
+            {% for trip in trips %}
+            <li>
+                <strong>Ride:</strong> {{ forloop.counter }}<br>
+                <strong>From:</strong> {{trip.origin}} <br>
+                <strong>To:</strong> {{trip.destination}} <br>
+                <strong><i title="Date Time" class="bi bi-clock me-1"></i></strong> {{trip.start_date}}|{{trip.start_time}} <br>
+                <strong><i title="Distance" class="bi bi-speedometer me-1"></i></strong> {{trip.distance}} KM <br>
+                <strong><i title="Amount" class="bi bi-cash me-1"></i></strong> {{trip.amount}}₹ (6₹/km)<br>
+                <strong><i title="Is Expired" class="bi bi-calendar2-x me-1"></i></i></strong>{% if trip.is_expired %} Expired {% else %} Not Expired {% endif %}<br>
+                <strong>Status:</strong> 
+                    <span class="bg-{{trip.get_status_color}}" style="color: #ffffff; font-size: 12px; padding: 3px 5px; border-radius: 5px;">
+                        {{trip.get_status_display}}
+                    </span>
+                <div class="actions">
+                    {% if trip.is_booked %} <a title="verify Booking" data-bs-toggle="modal" data-bs-target="#verifyBooking{{trip.id}}"><i class="bi bi-patch-check"></i></a> {% endif %}
+                    <a href="{% url 'edit_trip' trip.id %}" title="Edit Ride"><i class="bi bi-pencil-square"></i></a>
+                    <a title="Delete Ride" data-bs-toggle="modal" data-bs-target="#deleteTrip{{trip.id}}"><i class="bi bi-trash"></i></a>     
+                </div>
+                <!-- Modal -->
+                <div class="modal fade" id="deleteTrip{{trip.id}}" tabindex="-1" aria-labelledby="deleteTripLabel{{trip.id}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="deleteTripLabel{{trip.id}}">Are you sure? You want to delete</h1>
+                            </div>
+                            <div class="modal-footer">             
+                                <form action="{% url 'delete_trip' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="trip" value="{{trip.id}}">
+                                    <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-danger bi bi-trash"> Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="verifyBooking{{trip.id}}" tabindex="-1" aria-labelledby="verifyBookingLabel{{trip.id}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="verifyBookingLabel{{trip.id}}">Are you sure? You want to verify the booking</h1>
+                            </div>
+                            <div class="modal-footer">             
+                                <form action="{% url 'verify_booking' %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="trip" value="{{trip.id}}">
+                                    <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary bi bi-patch-check"> Verify</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}     
+        </ul>
+    </div>
+
+</div>
+   
+   
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("sidebarToggle");
+    
+    toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        if (sidebar.classList.contains("active")) {
+            toggleBtn.innerHTML = '<i class="bi bi-caret-down-square me-2"></i>Hide My Rides';
+        } else {
+            toggleBtn.innerHTML = '<i class="bi bi-caret-right-square me-2"></i>Show My Rides';
+        }
+    });
+
+    $(document).ready(function () {
+        $('#status-filter').on('change', function () {
+            const selectedStatus = $(this).val();
+            $.ajax({
+                url: "{% url 'filter_trips' %}",
+                data: {status: selectedStatus},
+                success: function (response) {
+                    const ridesList = $('#rides-list');
+                    ridesList.empty();
+
+                    if (response.trips.length === 0) {
+                        ridesList.append('<strong>You Have No Rides!</strong>');
+                    } else {
+                        response.trips.forEach((trip, index) => {
+                            ridesList.append(`
+                                <li>
+                                    <strong>Ride:</strong> ${index + 1}<br>
+                                    <strong>From:</strong> ${trip.origin} <br>
+                                    <strong>To:</strong> ${trip.destination} <br>
+                                    <strong>Date & Time:</strong> ${trip.start_date} | ${trip.start_time} <br>
+                                    <strong>Distance:</strong> ${trip.distance} KM <br>
+                                    <strong>Amount:</strong> ${trip.amount}₹ (6₹/km)<br>
+                                    <strong>Is Expired:</strong> ${trip.is_expired}<br>
+                                    <strong>Status:</strong> 
+                                    <span class="bg-${trip.status_color}" style="color: #ffffff; font-size: 12px; padding: 3px 5px; border-radius: 5px;">
+                                        ${trip.status}
+                                    </span>
+                                    <div class="actions">
+                                        ${trip.is_booked ? `
+                                        <a title="Verify Booking" data-bs-toggle="modal" data-bs-target="#verifyBooking${trip.id}">
+                                            <i class="bi bi-patch-check"></i>
+                                        </a>` : ''}
+                                        <a href="/edit_trip/${trip.id}/" title="Edit Ride"><i class="bi bi-pencil-square"></i></a>
+                                        <a title="Delete Ride" data-bs-toggle="modal" data-bs-target="#deleteTrip${trip.id}"><i class="bi bi-trash"></i></a>     
+                                    </div>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="deleteTrip${trip.id}" tabindex="-1" aria-labelledby="deleteTripLabel${trip.id}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="deleteTripLabel${trip.id}">Are you sure? You want to delete</h1>
+                                                </div>
+                                                <div class="modal-footer">             
+                                                    <form action="{% url 'delete_trip' %}" method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="trip" value="${trip.id}">
+                                                        <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-danger bi bi-trash"> Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="verifyBooking${trip.id}" tabindex="-1" aria-labelledby="verifyBookingLabel${trip.id}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="verifyBookingLabel${trip.id}">Are you sure? You want to verify the booking</h1>
+                                                </div>
+                                                <div class="modal-footer">             
+                                                    <form action="{% url 'verify_booking' %}" method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="trip" value="${trip.id}">
+                                                        <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary bi bi-patch-check"> Verify</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `);
+                        });
+                    }
+                },
+                error: function () {
+                    alert('Failed to fetch trips. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}

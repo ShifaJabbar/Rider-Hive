@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %} Rider Hive {% endblock %}
+{% block content %}
+
+
+<style>
+    .main-container .heading {
+        text-align: center;
+
+    }
+    .main-container .car-row .btn {
+        background-color: #2f4f4f;
+        color: white;
+        border: none;
+        border-radius: 0rem 0rem 0.375rem 0.375rem!important;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+
+    .main-container .car-row .btn:hover {
+        background-color: #444;
+    }
+
+    .main-container .row > *{
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .main-container .row {
+        flex-wrap: wrap;
+    }
+    .main-container .card {
+        opacity: 0;
+        transform: translateX(-200px);
+        transition: all 0.8s ease;
+    }
+
+    .main-container .card {
+        margin: 0 auto;
+    }
+
+    .main-container .card.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .main-container .card:hover {
+        transform: scale(1.01);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); 
+    }
+
+</style>
+    
+      
+    
+<div class="main-container container mt-5 mb-5">
+
+    {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+        <strong>{{ msg }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    
+    <h1 class="heading">Search Results</h1>
+
+    <div class="row car-row">
+        {% for trip in trips %}
+        <div class="card m-3" style="width: 18rem;">
+            <img src="{{trip.map_image.url}}" class="card-img-top" style="height: 200px;" alt="Ride Image">
+            <div class="card-body">
+                <p><i class="bi bi-car-front-fill me-1"></i> {{trip.origin}}</p>
+                <p><i class="bi bi-arrow-right-circle me-1"></i> {{trip.destination}}</p>
+            </div>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong><i class="bi bi-clock me-1"></i></strong> {{trip.start_date}} | {{trip.start_time}}</li>
+                <li class="list-group-item"><strong><i class="bi bi-speedometer me-1"></i></strong> {{trip.distance}} KM </li>
+                <li class="list-group-item"><strong><i class="bi bi-cash me-1"></i></strong> {{trip.amount}}₹ (6₹/km)</li>
+                <li class="list-group-item p-0 m-0"><button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#bookNow{{trip.id}}">Book Now</button></li>
+            </ul>
+        </div>
+         <!-- Modal -->
+         <div class="modal fade" id="bookNow{{trip.id}}" tabindex="-1" aria-labelledby="bookNowLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="bookNowLabel">Are you sure?</h1>
+                    </div>
+                    <div class="modal-footer">             
+                        <form action="{% url 'add_booking' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{trip.id}}" name="trip" required>
+                            <button type="button" class="btn btn-secondary bi bi-x-lg" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-outline-primary">Book Now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const cards = document.querySelectorAll(".card");
+       
+        const revealCards = () => {
+            const windowHeight = window.innerHeight;
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if (cardTop < windowHeight - 50) {
+                    card.classList.add("visible");
+                }
+            });
+        };
+
+        window.addEventListener("scroll", revealCards);
+        revealCards();   
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}
+    

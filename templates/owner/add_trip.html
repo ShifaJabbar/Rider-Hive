@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Rider Hive {% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<style>
+    .navbar .searchForm {display: none!important;}
+    .main-container #map {
+        height: 400px;
+        width: 100%;
+    }
+    .main-container input, .main-container button {
+        width: 100%;
+        margin: 10px 0;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .main-container button {
+        background-color: #007BFF;
+        color: #fff;
+        cursor: pointer;
+    }
+    .main-container button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="main-container container">
+    <h1 class="mt-2 mb-2">Interactive Map with Route</h1>
+
+    {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+        <strong>{{ msg }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    
+    <div id="map"></div>
+
+    <form id="locationForm" action="{% url 'add_trip' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" id="map_image_file" name="map_image_file" style="display:none;">
+
+        <label for="origin">Origin:</label>
+        <input type="text" id="originPlace" name="InputoriginPlace" placeholder="Enter origin place">
+        <input type="text" id="origin_lat" name="origin_lat" readonly required>
+        <input type="text" id="origin_lon" name="origin_lon" readonly required>
+        <input type="text" id="origin_name" name="origin_name" readonly required>
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destinationPlace" name="InputdestinationPlace" placeholder="Enter destination place">
+        <input type="text" id="destination_lat" name="destination_lat" readonly required>
+        <input type="text" id="destination_lon" name="destination_lon" readonly required>
+        <input type="text" id="destination_name" name="destination_name" readonly required>
+
+        <label for="distance">Distance (km):</label>
+        <input type="text" id="distance" name="distance" readonly required>
+        
+        <label for="seats_count">Seats Count:</label>
+        <input type="number" id="seats_count" name="seats_count" required>
+
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required>
+
+        <label for="start_time">Start Time:</label>
+        <input type="time" id="start_time" name="start_time" required>
+
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    const map = L.map('map').setView([11.983198279521984, 75.31400709705322], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const NominatimAPI = 'https://nominatim.openstreetmap.org';
+    let originMarker = null;
+    let destinationMarker = null;
+    let routingControl = null;
+    let selectingFor = null; // keeps track of what the user is selecting
+
+    const originPlaceInput = document.getElementById('originPlace');
+    const originLatInput = document.getElementById('origin_lat');
+    const originLonInput = document.getElementById('origin_lon');
+    const originNameInput = document.getElementById('origin_name');
+
+    const destinationPlaceInput = document.getElementById('destinationPlace');
+    const destinationLatInput = document.getElementById('destination_lat');
+    const destinationLonInput = document.getElementById('destination_lon');
+    const destinationNameInput = document.getElementById('destination_name');
+
+    const distanceInput = document.getElementById('distance');
+    const resetButton = document.getElementById('resetButton');
+
+    // This function returns the place name based on lat and lon
+    async function getPlaceName(lat, lon) {
+        try {
+            const response = await fetch(`${NominatimAPI}/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+            return data.display_name || 'Unknown location';
+        } catch (error) {
+            console.error('Error fetching place name:', error);
+            return 'Unknown location';
+        }
+    }
+
+    // This function sets the marker and updates the input fields
+    function setMarker(lat, lon, label, existingMarker) {
+        if (existingMarker) {
+            map.removeLayer(existingMarker);
+        }
+
+        const marker = L.marker([lat, lon], { draggable: true })
+            .addTo(map)
+            .bindPopup(`${label} - Drag to adjust`)
+            .on('dragend', async function (e) {
+                const updatedLatLng = e.target.getLatLng();
+                const updatedPlaceName = await getPlaceName(updatedLatLng.lat, updatedLatLng.lng);
+                updateInputFields(label, updatedLatLng.lat, updatedLatLng.lng, updatedPlaceName);
+            })
+            .openPopup();
+
+        return marker;
+    }
+
+    // This function updates the input fields based on the label (Origin/Destination)
+    function updateInputFields(label, lat, lon, placeName) {
+        if (label === 'Origin') {
+            originLatInput.value = Number(lat).toFixed(5);
+            originLonInput.value = Number(lon).toFixed(5);
+            originNameInput.value = placeName;
+            originPlaceInput.value = placeName;
+        } else if (label === 'Destination') {
+            destinationLatInput.value = Number(lat).toFixed(5);
+            destinationLonInput.value = Number(lon).toFixed(5);
+            destinationNameInput.value = placeName;
+            destinationPlaceInput.value = placeName;
+        }
+    }
+
+    // Listen for clicks on the map to place origin or destination markers
+    map.on('click', async function (e) {
+        if (!selectingFor) {
+            alert('Please select "Origin" or "Destination" to set the point.');
+            return;
+        }
+
+        const { lat, lng } = e.latlng;
+        const placeName = await getPlaceName(lat, lng);
+
+        if (selectingFor === 'origin') {
+            originMarker = setMarker(lat, lng, 'Origin', originMarker);
+            updateInputFields('Origin', lat, lng, placeName);
+        } else if (selectingFor === 'destination') {
+            destinationMarker = setMarker(lat, lng, 'Destination', destinationMarker);
+            updateInputFields('Destination', lat, lng, placeName);
+        }
+
+        if (originMarker && destinationMarker) {
+            drawRoute(originMarker.getLatLng(), destinationMarker.getLatLng());
+        }
+    });
+
+    // Fetch the coordinates of a place and set the marker
+    async function setMarkerByPlace(inputField, label) {
+        const place = inputField.value;
+        const location = await getCoordinates(place);
+        if (location) {
+            const { lat, lon, display_name } = location;
+
+            if (label === 'Origin') {
+                originMarker = setMarker(lat, lon, label, originMarker);
+                updateInputFields('Origin', lat, lon, display_name);
+            } else if (label === 'Destination') {
+                destinationMarker = setMarker(lat, lon, label, destinationMarker);
+                updateInputFields('Destination', lat, lon, display_name);
+            }
+
+            if (originMarker && destinationMarker) {
+                drawRoute(originMarker.getLatLng(), destinationMarker.getLatLng());
+            }
+        }
+    }
+
+    // Fetch coordinates based on place name
+    async function getCoordinates(place) {
+        try {
+            const response = await fetch(`${NominatimAPI}/search?format=json&q=${encodeURIComponent(place)}`);
+            const data = await response.json();
+            if (data.length > 0) {
+                return data[0];
+            }
+            alert('Place not found. Please try again.');
+            return null;
+        } catch (error) {
+            console.error('Error fetching coordinates:', error);
+            return null;
+        }
+    }
+
+    // Draw a route between origin and destination
+    function drawRoute(origin, destination) {
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
+
+        routingControl = L.Routing.control({
+            waypoints: [origin, destination],
+            routeWhileDragging: true,
+            createMarker: () => null
+        })
+            .on('routesfound', function (e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                const distanceKm = (summary.totalDistance / 1000).toFixed(2);
+                distanceInput.value = distanceKm;
+            })
+            .addTo(map);
+    }
+
+    // // Reset all markers and inputs
+    // resetButton.addEventListener('click', function () {
+    //     if (originMarker) map.removeLayer(originMarker);
+    //     if (destinationMarker) map.removeLayer(destinationMarker);
+    //     if (routingControl) map.removeControl(routingControl);
+
+    //     originMarker = null;
+    //     destinationMarker = null;
+    //     routingControl = null;
+
+    //     originPlaceInput.value = '';
+    //     originLatInput.value = '';
+    //     originLonInput.value = '';
+    //     originNameInput.value = '';
+
+    //     destinationPlaceInput.value = '';
+    //     destinationLatInput.value = '';
+    //     destinationLonInput.value = '';
+    //     destinationNameInput.value = '';
+
+    //     distanceInput.value = '';
+    //     selectingFor = null;  // reset selectingFor to avoid confusion
+    // });
+
+    // When user focuses on an input, set selectingFor to the corresponding location
+    originPlaceInput.addEventListener('focus', function () {
+        selectingFor = 'origin';
+    });
+
+    destinationPlaceInput.addEventListener('focus', function () {
+        selectingFor = 'destination';
+    });
+
+    // Trigger map marker placement based on place name entered in the input field
+    originPlaceInput.addEventListener('change', function () {
+        setMarkerByPlace(originPlaceInput, 'Origin');
+    });
+
+    destinationPlaceInput.addEventListener('change', function () {
+        setMarkerByPlace(destinationPlaceInput, 'Destination');
+    });
+
+
+    const mapContainer = document.getElementById('map');
+    
+    document.getElementById('locationForm').addEventListener('submit', async function (e) {
+        e.preventDefault(); // Prevent default form submission
+
+        // Capture the map container
+        const canvas = await html2canvas(mapContainer, {
+            useCORS: true, // For cross-origin images
+            scale: 2, // High resolution
+        });
+
+        // Convert canvas to an image and crop it symmetrically
+        const croppedCanvas = document.createElement('canvas');
+        const ctx = croppedCanvas.getContext('2d');
+
+        // Determine cropping dimensions (e.g., symmetric square)
+        const size = Math.min(canvas.width, canvas.height);
+        const startX = (canvas.width - size) / 2;
+        const startY = (canvas.height - size) / 2;
+
+        croppedCanvas.width = size;
+        croppedCanvas.height = size;
+        ctx.drawImage(canvas, startX, startY, size, size, 0, 0, size, size);
+
+        // Convert cropped canvas to a Blob (image file)
+        croppedCanvas.toBlob(blob => {
+            // Create a FormData object and append the file
+            const formData = new FormData(e.target);
+            formData.append('map_image_file', blob, 'map_image.png');
+
+            const form = document.getElementById('locationForm');
+            // Send the form data via AJAX
+            fetch(e.target.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to submit');
+                }
+                return response.json();
+            }).then(data => {
+                if (data.message) {
+                    const messageContainer = document.getElementById('successMessage');
+                    if (messageContainer) {
+                        messageContainer.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>${data.message}</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>`;
+                    }
+                }
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            }) .catch(error => {
+                console.error('Submission error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }, 'image/png');
+        
+    });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}
+

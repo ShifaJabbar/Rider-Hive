@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Rider Register {% endblock %}
+{% block content %}
+
+{% block navbar %}
+{% endblock %}
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-image: url("{% static 'background/car.webp' %}");
+        background-size: cover;
+        background-position: center;
+        text-align: center;
+    }
+
+    .container {
+        background-color: rgba(255, 255, 255, 0); 
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgb(225, 220, 220);
+        width: 400px;
+        backdrop-filter: blur(10px);
+    }
+
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-style: italic;
+        font-family: fantasy;
+    }
+
+    .description {
+        font-size: 1rem;
+        color: #ffffff;
+        margin-bottom: 2rem;
+        font-family: "Poppins", sans-serif;
+    }
+
+    label {
+        font-family: "Poppins", sans-serif;
+    }
+
+    input {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+
+    input[type='submit']:hover {
+        background-color: #06d064;
+    }
+
+    .footer-text {
+        font-size: 0.875rem;
+        color: #ffffff;
+        margin-top: 2rem;
+    }
+
+    .footer-text a {
+        color: #06ff0e;
+        text-decoration: none;
+    }
+
+</style>
+
+
+<div class="container">
+    <h2>Rider Hive</h2>
+
+    <p class="description">Register Rider</p>
+
+    {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+        <strong>{{ msg }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+
+    <form class="form-floating" action="{% url 'rider_reg' %}" method="POST">
+        {% csrf_token %}
+
+        <div class="form-group form-floating">               
+            <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required>  
+            <label for="name">Enter Your Full Name</label>      
+        </div>
+
+        <div class="form-group form-floating">               
+            <input type="email" class="form-control" id="email" name="email" placeholder="name@gmail.com" required>  
+            <label for="email">Enter Your Email</label>      
+        </div>
+
+        <div class="form-group form-floating">               
+            <input type="text" class="form-control" id="phone" name="phone" minlength="10" maxlength="10" placeholder="Enter Your Phone Number" required>  
+            <label for="phone">Enter Your Phone Number</label>      
+        </div>
+
+        <div class="form-group form-floating">               
+            <input type="text" class="form-control" id="address" name="address" placeholder="Enter Your Address" required>  
+            <label for="address">Enter Your Address</label>      
+        </div>
+
+        <div class="form-group form-floating">             
+            <input type="password" class="form-control" id="password" name="password" minlength="8" maxlength="20" placeholder="Enter A password" required>  
+            <label for="password">Enter A password</label>   
+        </div>
+
+        <div class="form-group">
+            <input type="submit" class="btn btn-success" value="Register">
+        </div>     
+    </form>
+
+    <p class="footer-text">
+        Already have an account? <a href="{% url 'rider_login' %}">Login Here</a>
+    </p>  
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}   
+{% block footer %}{% endblock %}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Edit Trip - Rider Hive {% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<style>
+    .navbar .searchForm { display: none !important; }
+    .main-container #map {
+        height: 400px;
+        width: 100%;
+    }
+    .main-container input, .main-container button {
+        width: 100%;
+        margin: 10px 0;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .main-container button {
+        background-color: #007BFF;
+        color: #fff;
+        cursor: pointer;
+    }
+    .main-container button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="main-container container">
+    <h1 class="mt-2 mb-2">Edit Trip Details</h1>
+
+    {% for msg in messages %}
+    <div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+        <strong>{{ msg }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+
+    <div id="map"></div>
+
+    <form id="locationForm" action="{% url 'edit_trip' trip.id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="trip" value="{{ trip.id }}">
+
+        <label for="originPlace">Origin:</label>
+        <input type="text" id="originPlace" name="InputoriginPlace" value="{{ trip.origin }}" autocomplete="off" required>
+        <input type="text" id="origin_lat" name="origin_lat" value="{{ trip.origin_lat }}" readonly required>
+        <input type="text" id="origin_lon" name="origin_lon" value="{{ trip.origin_lon }}" readonly required>
+        <input type="text" id="origin_name" name="origin_name" value="{{ trip.origin }}" readonly required>
+
+        <label for="destinationPlace">Destination:</label>
+        <input type="text" id="destinationPlace" name="InputdestinationPlace" value="{{ trip.destination }}" autocomplete="off" required>
+        <input type="text" id="destination_lat" name="destination_lat" value="{{ trip.destination_lat }}" readonly required>
+        <input type="text" id="destination_lon" name="destination_lon" value="{{ trip.destination_lon }}" readonly required>
+        <input type="text" id="destination_name" name="destination_name" value="{{ trip.destination }}" readonly required>
+
+        <label for="distance">Distance (km):</label>
+        <input type="text" id="distance" name="distance" value="{{ trip.distance }}" readonly required>
+
+        <label for="seats_count">Seats Count:</label>
+        <input type="number" id="seats_count" name="seats_count" value="{{ trip.seats }}" required>
+
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ trip.start_date|date:'Y-m-d' }}" required>
+
+        <label for="start_time">Start Time:</label>
+        <input type="time" id="start_time" name="start_time" value="{{ trip.start_time|date:'H:i' }}" required>
+
+        <button type="submit">Save</button>
+        <button type="button" id="resetButton">Reset</button>
+    </form>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script>
+    const map = L.map('map').setView(['{{ trip.origin_lat }}', '{{ trip.origin_lon }}'], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const originLatLng = L.latLng('{{ trip.origin_lat }}', '{{ trip.origin_lon }}');
+    const destinationLatLng = L.latLng('{{ trip.destination_lat }}', '{{ trip.destination_lon }}');
+
+    let originMarker = L.marker(originLatLng, { draggable: true })
+        .addTo(map)
+        .bindPopup('Origin - Drag to adjust')
+        .openPopup();
+
+    let destinationMarker = L.marker(destinationLatLng, { draggable: true })
+        .addTo(map)
+        .bindPopup('Destination - Drag to adjust')
+        .openPopup();
+
+    let routingControl = L.Routing.control({
+        waypoints: [originLatLng, destinationLatLng],
+        routeWhileDragging: true,
+        createMarker: () => null
+    }).addTo(map);
+
+    routingControl.on('routesfound', function (e) {
+        const routes = e.routes;
+        const summary = routes[0].summary;
+        const distanceKm = (summary.totalDistance / 1000).toFixed(2);
+        document.getElementById('distance').value = distanceKm;
+    });
+
+    function updateInputFields(marker, latInput, lonInput, nameInput, label) {
+        const latLng = marker.getLatLng();
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latLng.lat}&lon=${latLng.lng}`)
+            .then(response => response.json())
+            .then(data => {
+                const placeName = data.display_name || 'Unknown location';
+                latInput.value = latLng.lat.toFixed(5);
+                lonInput.value = latLng.lng.toFixed(5);
+                nameInput.value = placeName;
+                document.getElementById(`${label}Place`).value = placeName;
+            })
+            .catch(err => console.error('Error fetching place name:', err));
+    }
+
+    originMarker.on('dragend', function () {
+        updateInputFields(originMarker, 
+            document.getElementById('origin_lat'), 
+            document.getElementById('origin_lon'), 
+            document.getElementById('origin_name'), 
+            'origin');
+    });
+
+    destinationMarker.on('dragend', function () {
+        updateInputFields(destinationMarker, 
+            document.getElementById('destination_lat'), 
+            document.getElementById('destination_lon'), 
+            document.getElementById('destination_name'), 
+            'destination');
+    });
+
+    document.getElementById('resetButton').addEventListener('click', function () {
+        map.removeLayer(originMarker);
+        map.removeLayer(destinationMarker);
+        map.removeControl(routingControl);
+
+        originMarker = null;
+        destinationMarker = null;
+        routingControl = null;
+
+        document.getElementById('originPlace').value = '';
+        document.getElementById('origin_lat').value = '';
+        document.getElementById('origin_lon').value = '';
+        document.getElementById('origin_name').value = '';
+
+        document.getElementById('destinationPlace').value = '';
+        document.getElementById('destination_lat').value = '';
+        document.getElementById('destination_lon').value = '';
+        document.getElementById('destination_name').value = '';
+
+        document.getElementById('distance').value = '';
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}

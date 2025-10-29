@@ -1,0 +1,8 @@
+django
+django-jazzmin
+django-solo
+pillow
+qrcode
+stripe
+
+

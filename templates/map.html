@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Distance Calculator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Map Distance Calculator</h1>
+    <div id="map"></div>
+
+    <form>
+        <label for="origin">Origin (latitude, longitude):</label>
+        <input type="text" id="origin" placeholder="Select on map or enter manually" readonly>
+
+        <label for="destination">Destination (latitude, longitude):</label>
+        <input type="text" id="destination" placeholder="Select on map or enter manually" readonly>
+
+        <label for="distance">Distance (km):</label>
+        <input type="text" id="distance" placeholder="Distance will appear here" readonly>
+
+        <button type="button" id="reset">Reset</button>
+    </form>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([11.983198279521984, 75.31400709705322], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const originInput = document.getElementById('origin');
+        const destinationInput = document.getElementById('destination');
+        const distanceInput = document.getElementById('distance');
+        const resetButton = document.getElementById('reset');
+
+        let originMarker = null;
+        let destinationMarker = null;
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const toRad = (value) => (value * Math.PI) / 180;
+
+            const R = 6378; // Earth's radius in km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        function updateDistance() {
+            if (originMarker && destinationMarker) {
+                const originCoords = originMarker.getLatLng();
+                const destinationCoords = destinationMarker.getLatLng();
+
+                const distance = calculateDistance(
+                    originCoords.lat, originCoords.lng,
+                    destinationCoords.lat, destinationCoords.lng
+                ).toFixed(2);
+
+                distanceInput.value = `${distance} km`;
+            }
+        }
+
+        function addMarker(lat, lng, type) {
+            const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+            marker.on('dragend', function () {
+                const position = marker.getLatLng();
+                if (type === 'origin') {
+                    originInput.value = `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+                } else {
+                    destinationInput.value = `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+                }
+                updateDistance();
+            });
+
+            return marker;
+        }
+
+        map.on('click', function (e) {
+            const { lat, lng } = e.latlng;
+
+            if (!originMarker) {
+                originMarker = addMarker(lat, lng, 'origin');
+                originInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            } else if (!destinationMarker) {
+                destinationMarker = addMarker(lat, lng, 'destination');
+                destinationInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                updateDistance();
+            }
+        });
+
+        resetButton.addEventListener('click', function () {
+            if (originMarker) {
+                map.removeLayer(originMarker);
+                originMarker = null;
+            }
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+            originInput.value = '';
+            destinationInput.value = '';
+            distanceInput.value = '';
+        });
+    </script>
+</body>
+</html>

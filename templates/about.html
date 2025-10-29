@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Rider Hive {% endblock %}
+{% block content %}
+
+<style>
+    .main-container .main-content {
+        background: linear-gradient(to right, #eff0f0, #eaedee, #ffffff);
+        padding: 60px 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-container .main-containe .main-content h2 {
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+        color: #2c3e50;
+    }
+
+    .main-container .main-content p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        max-width: 900px;
+        margin: 20px auto;
+        text-align: justify;
+        color: #555;
+    }
+
+    .main-container .section-with-image {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 3rem;
+        margin-bottom: 5rem;
+    }
+
+    .main-container .section-with-image img {
+        width: 40%;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-right: 1rem;
+    }
+
+    .main-container .section-with-image .text {
+        width: 50%;
+        margin-left: 2rem;
+    }
+
+    .main-container .section-with-image h3 {
+        font-size: 2.5rem;
+        color: #34495e;
+        margin-bottom: 20px;
+    }
+
+    .main-container .section-with-image p, .section-with-image ul {
+        font-size: 1.1rem;
+        color: #7f8c8d;
+        max-width: 900px;
+        line-height: 1.6;
+    }
+
+    .main-container .team-section {
+        margin: 3rem;
+        margin-bottom: 5rem;
+    }
+
+    .main-container .team-members {
+        display: flex;
+        justify-content: space-around; 
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    .main-container .team-member {
+        text-align: center;
+    }
+
+    .main-container .team-member img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+    }
+
+    .main-container .team-member h4 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .main-container .team-member p {
+        color: #e8efef;
+    }
+
+
+    @media (max-width:767px) {
+        .main-container .main-content p {
+            font-size: 0.7rem;
+            margin-right: 1rem;
+        }
+
+        .main-container .section-with-image img {
+            width: 100%!important;
+            margin-right: 0!important;
+        }
+
+        .main-container .section-with-image .text {
+            width: 50%;
+            margin-left: 0!important;
+            margin-top: 2rem;
+        }
+
+        .main-container .section-with-image h3 {
+            font-size: 1rem!important;
+            color: #e2e5e8;
+            margin-bottom: 20px;
+        }
+
+        .main-container .section-with-image * {
+            font-size: 0.5rem!important;
+        }
+        .main-container .section-with-image {
+            margin: 3rem;
+            margin-bottom: 2rem;
+        }
+    }
+</style>
+
+
+<div class="main-container">
+    <section class="main-content">
+        <h2>About Us</h2>
+        <p>Welcome to Ride Hive, your go-to platform for sustainable and convenient carpooling! Our mission is to make
+            commuting easier, reduce carbon footprints, and foster a sense of community by connecting people for shared
+            rides.</p>
+        <p>Whether you're commuting to work, going to school, or heading to an event, Ride Hive brings together drivers
+            and passengers in a safe, eco-friendly, and cost-effective way. We believe that small changes in our daily
+            transportation habits can lead to big impacts on the environment and the community.</p>
+        <p>Join the Ride Hive community today and experience the future of carpooling!</p>
+    </section>
+
+    <section class="section-with-image">
+        <img src="{% static 'image/ab1.jpg' %}" alt="Our Values Image">
+
+        <div class="text">
+            <h3>Our Values</h3>
+            <p>At Ride Hive, we are driven by core values that guide our actions and decisions:</p>
+            <ul>
+                <li><strong>Community</strong>: We strive to build a supportive and inclusive community where everyone can benefit from carpooling.</li>
+                <li><strong>Sustainability</strong>: We are committed to reducing our carbon footprint and promoting eco-friendly transportation.</li>
+                <li><strong>Safety</strong>: Your safety is our priority. We ensure that all users are verified, and rides are monitored for security.</li>
+                <li><strong>Convenience</strong>: Ride Hive makes commuting easier by providing simple, user-friendly technology to connect drivers and passengers.</li>
+            </ul>
+        </div>
+        
+    </section>
+
+    <section class="section-with-image">
+        
+        <div class="text">
+            <h3>How It Works</h3>
+            <p>Ride Hive makes carpooling easy and accessible. Here’s how it works:</p>
+            <ol>
+                <li><strong>Sign Up</strong> – Create a free Ride Hive account in minutes.</li>
+                <li><strong>Find a Ride</strong> – Search for available rides that match your schedule and destination.</li>
+                <li><strong>Connect</strong> – Reach out to the driver or passenger to confirm details.</li>
+                <li><strong>Ride Together</strong> – Enjoy your ride with others while saving money and reducing environmental impact.</li>
+                <li><strong>Rate & Review</strong> – After the ride, rate the experience and share feedback to help others.</li>
+            </ol>
+        </div>  
+        <img src="{% static 'image/document.png' %}" alt="How It Works Image">
+    </section>
+
+    <section class="section-with-image">
+        <img src="{% static 'image/ychoose.jpg' %}" alt="Why Choose Us Image">
+        <div class="text">
+            <h3>Why Choose Ride Hive?</h3>
+            <p>Ride Hive offers multiple benefits that make it a great choice for daily commuting:</p>
+            <ul>
+                <li>Save money on gas and parking.</li>
+                <li>Reduce your carbon footprint with eco-friendly travel.</li>
+                <li>Meet new people and build a sense of community.</li>
+                <li>Enjoy more flexible and convenient travel options.</li>
+                <li>Access a secure and reliable platform with verified users.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="team-section">
+        <h3 style=" font-size: 2.5rem; margin-bottom: 30px; color: #2c3e50; text-align: center;">Meet Our Team</h3>
+        <div class="team-members">
+            <div class="team-member">
+                <img src="{% static 'image/man.png' %}" alt="Shifa Jabbar">
+                <h4>Shifa Jabbar</h4>
+                <p>Founder & CEO</p>
+            </div>
+            <div class="team-member">
+                <img src="{% static 'image/man.png' %}" alt="Shamil">
+                <h4>Shamil</h4>
+                <p>Chief Operating Officer</p>
+            </div>
+            <div class="team-member">
+                <img src="{% static 'image/man.png' %}" alt="Nahil">
+                <h4>Nahil</h4>
+                <p>Lead Developer</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}

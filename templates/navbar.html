@@ -1,0 +1,63 @@
+{% load static %}
+
+<style>
+    .navbar .bi::before {
+        font-weight: 600!important;
+    }
+    .navbar .navbar-brand img {
+        animation: moveUpDown 2s ease-in-out infinite; 
+    }
+    .navbar .nav-link {
+        font-weight: 600!important;
+    }
+
+    @keyframes moveUpDown {
+        0% {transform: translateY(0)}
+        50% {transform: translateY(-10px)}
+        100% {transform: translateY(0)}
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg" style="background-color: rgba(128, 128, 128, 0.429)">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'dashbord' %}">
+            <img src="{% static 'site_logo/logo-circle.png' %}" alt="Logo" width="40" height="40" class="d-inline-block align-text-top">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/trips/' %} active {% endif %}" href="{% url 'trips' %}">Trips</a>
+                </li>
+       
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/about/' %} active {% endif %}" aria-current="page" href="{% url 'about' %}">About</a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/support/' %} active {% endif %}" href="{% url 'support' %}">Support</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/review/' %} active {% endif %}" href="{% url 'review' %}">Review</a>
+                </li>
+            </ul>
+
+            <div class="nav-item dropdown dropstart me-5" style="color: black!important;">
+                {% if 'owner' in request.session or 'rider' in request.session %}
+                    <a class="nav-link bi bi-person-circle {% if request.path == '/' %} active {% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> Profile</a>
+                {% else %}
+                    <a class="nav-link bi bi-person-circle {% if request.path == '/' %} active {% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> Login</a>
+                {% endif %}
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'owner' %}">Owner</a></li>
+                    <li><a class="dropdown-item" href="{% url 'rider' %}">Rider</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>

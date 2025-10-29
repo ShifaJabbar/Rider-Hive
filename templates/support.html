@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Rider Hive {% endblock %}
+{% block content %}
+
+<style>
+    .main-container main {
+        padding: 2em;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .main-container h1 {
+        color: (white, 96, 96);
+    }
+    
+    .main-container .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    .main-container .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        opacity: 0;
+        transform: translateX(-200px);
+        transition: all 1s ease;
+    }
+
+    .main-container .card.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .main-container .card:hover {
+        transform: scale(1.05);
+    }
+    .main-container .card h3 {
+        color: black;
+        font-size: 1.2em;
+    }
+    .main-container .card p {
+        color: #555;
+        font-size: 1em;
+        margin: 10px 0;
+    }
+    .main-container .card img {
+        width: 100%;
+        height: 150px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+    }
+    .main-container .card a {
+        display: inline-block;
+        background-color: black;
+        color: white;
+        padding: 10px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: auto;
+        transition: background-color 0.3s;
+    }
+    .main-container .card a:hover {
+        background-color:black;
+    }
+
+    /* Form styling */
+    .main-container .complaint-form {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px black(0, 0, 0, 0.1);
+        padding: 20px;
+        margin: 30px auto;
+        max-width: 1200px;
+    }
+    .main-container .complaint-form label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+    }
+    .main-container .complaint-form input, .main-container .complaint-form textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid rgb(19, 18, 18);
+    }
+    .main-container .complaint-form button {
+        background-color: rgb(117, 112, 112);
+        color: black(5, 5, 5);
+        padding: 12px 20px;
+        font-size: 1.2em;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%; /* Full width for the button */
+    }
+    .main-container .complaint-form button:hover {
+        background-color: #706d6d;
+    }
+</style>
+
+{% for msg in messages %}
+<div class="alert {% if msg.tags == 'error' %} alert-danger {% else %} alert-{{ msg.tags }} {% endif %} alert-dismissible fade show" role="alert">
+    <strong>{{ msg }}</strong>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+
+<header style="background-color: black; color: white; padding: 20px; text-align: center; margin: 0; font-size: 2.5em;">
+    <h1>How can we help you?</h1>
+</header>
+
+<div class="main-container container">
+    <main>
+        <div class="card-container">
+            <div class="card">
+                <img src="{% static 'image/owner.jpg' %}" alt="Rider and Owner Help">
+                <h3>For Riders & Car Owners</h3>
+                <p>Get answers to common questions for both riders and car owners on booking, managing trips, and listing cars.</p>
+                <a href="#">Explore Help</a>
+            </div>
+
+            <div class="card">
+                <img src= "{% static 'image/logb.jpg' %}" alt="Profile and Account Help">
+                <h3>Profile & Account</h3>
+                <p>Need help with your profile, account settings, or preferences? Find solutions here.</p>
+                <a href="#">Explore Account Help</a>
+            </div>
+
+            <div class="card">
+                <img src="{% static 'image/rhnew.jpg' %}" alt="Trust and Safety Help">
+                <h3>Trust & Safety</h3>
+                <p>Learn about our policies and guidelines for safe and secure car-sharing experiences.</p>
+                <a href="#">Explore Trust & Safety</a>
+            </div>
+
+            <div class="card">
+                <img src="{% static 'image/about.webp' %}" alt="Payment and General FAQs">
+                <h3>Payment & FAQs</h3>
+                <p>Get support with payments, billing issues, and find answers to general questions about our platform.</p>
+                <a href="#">Explore Payment Help</a>
+            </div>
+        </div>
+    </main>
+    <div class="complaint-form">
+        <h2>Submit Your Complaint or Query</h2>
+
+        <form action="{% url 'support_form' %}" method="POST">
+            {% csrf_token %}
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="message">Complaint or Query</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const cards = document.querySelectorAll(".card");
+
+        const revealCards = () => {
+            const windowHeight = window.innerHeight;
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if (cardTop < windowHeight - 50) {
+                    card.classList.add("visible");
+                }
+            });
+        };
+
+        window.addEventListener("scroll", revealCards);
+        revealCards(); 
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+{% endblock %}

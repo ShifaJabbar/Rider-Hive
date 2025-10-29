@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2f4f4f; /* Dark slate green background */
+            color: #ffffff; /* White text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            background-color: #3b6c6c; /* Lighter greenish grey for the form container */
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px); /* Blur effect for a modern feel */
+            margin-bottom: 50px; /* Adds space between the form and footer */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #d3d3d3; /* Light gray color */
+            margin-bottom: 5px;
+        }
+
+        input, textarea, button {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2a4a4a; /* Darker greenish-grey */
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #aad3d3; /* Light green color on focus */
+            background-color: #3a6e6e; /* Lighter green on focus */
+        }
+
+        button {
+            background-color: #0066cc; /* Blue button */
+            color: #ffffff;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #004c99; /* Darker blue on hover */
+            transform: translateY(-3px); /* Slight elevation on hover */
+        }
+
+        .reset-password {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #aad3d3; /* Light greenish color for reset password link */
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .reset-password:hover {
+            opacity: 1;
+            color: #ffffff; /* White color on hover */
+        }
+
+        /* Profile image styling */
+        .profile-img-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-img-wrapper img {
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 4px solid #aad3d3; /* Light border around the image */
+        }
+
+        .profile-img-wrapper input[type="file"] {
+            display: none; /* Hide the default file input */
+        }
+
+        .upload-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #004c99;
+        }
+
+        /* Footer styles */
+        footer {
+            width: 100%;
+            background-color: #1f3b3b; /* Dark greenish gray */
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            bottom: 0;
+        }
+
+        footer a {
+            color: #aad3d3; /* Light greenish link color */
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #ffffff;
+        }
+
+        footer p {
+            margin: 10px 0 0;
+            font-size: 14px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Owner Profile</h1>
+
+        <!-- Profile Image Section -->
+        <div class="profile-img-wrapper">
+            <img src="{{ form.profile_picture.value|default:'' }}" alt="Profile Image" id="profile-img">
+        </div>
+
+        <!-- Image Upload Button -->
+        <label for="profile_picture" class="upload-btn">Upload New Photo</label>
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" onchange="updateImagePreview()">
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %} <!-- CSRF token for security in Django -->
+
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" value="{{ form.first_name.value|default_if_none:'' }}">
+
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" value="{{ form.last_name.value|default_if_none:'' }}">
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ form.email.value|default_if_none:'' }}">
+
+            <label for="phone_number">Phone Number</label>
+            <input type="text" id="phone_number" name="phone_number" placeholder="Enter your phone number" value="{{ form.phone_number.value|default_if_none:'' }}">
+
+            <label for="address">Address</label>
+            <textarea id="address" name="address" rows="4" placeholder="Enter your address">{{ form.address.value|default_if_none:'' }}</textarea>
+
+            <button type="submit">Save Changes</button>
+        </form>
+
+        <a href="{% url 'password_reset' %}" class="reset-password">Reset Password</a>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Ride Hive. All Rights Reserved.</p>
+        
+    </footer>
+
+    <script>
+        // Function to update the profile image preview
+        function updateImagePreview() {
+            const file = document.getElementById('profile_picture').files[0];
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                document.getElementById('profile-img').src = reader.result;
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html>
